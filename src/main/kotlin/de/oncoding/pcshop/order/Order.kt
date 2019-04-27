@@ -12,7 +12,7 @@ data class Order (
         @Id
         val id: String,
         val amount: Long,
-        val productId: Long,
+        val productId: String,
         val orderDate: LocalDate,
         val customerId: Long
 )

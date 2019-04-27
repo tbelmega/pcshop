@@ -14,4 +14,7 @@ interface ProductRepository: JpaRepository<Product, String> {
     @Query(nativeQuery = true, value = "SELECT * FROM product LIMIT 1")
     override fun findAll(): List<Product>
 
+    @Query(nativeQuery = true, value = "SELECT * FROM product LIMIT ?1")
+    fun findMostOrderedProducts(i: Int): List<Product>
+
 }

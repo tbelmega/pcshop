@@ -1,5 +1,6 @@
 package de.oncoding.pcshop.product
 
+import de.oncoding.pcshop.order.Order
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.Matchers.containsInAnyOrder
@@ -8,8 +9,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import java.time.LocalDate
+import java.util.*
 
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner::class)
@@ -128,6 +132,9 @@ class ProductRepositoryTestAssertJ {
     @Autowired
     private lateinit var productRepository: ProductRepository
 
+    @Autowired
+    private lateinit var entityManager: TestEntityManager
+
     @Test
     fun `saves product in database and loads by id`() {
         // given
@@ -152,5 +159,48 @@ class ProductRepositoryTestAssertJ {
 
         // then
         assertThat(products).containsExactlyInAnyOrder(product1, product2)
+    }
+
+    @Test
+    fun `findMostOrderedProducts - no orders in db - return empty list`() {
+        // given
+        productRepository.save(Product("1", "Ryzen 7 2700X", "AMD"))
+        productRepository.save(Product("2", "Core i9 9900K", "Intel"))
+
+        // when
+        val foundProducts = productRepository.findMostOrderedProducts(1)
+
+        // then
+        assertThat(foundProducts).isEmpty()
+    }
+
+
+    @Test
+    fun `findMostOrderedProducts - 6 orders for 3 products in db - returns Top 2`() {
+        // given
+        val numberOfProducts = 2
+        val product1 = Product("1", "Ryzen 7 2700X", "AMD")
+        val product2 = Product("2", "Core i9 9900K", "Intel")
+        val product3 = Product("3", "Ryzen Threadripper 2990WX", "AMD")
+        productRepository.saveAll(setOf(product1, product2, product3))
+
+        persistNewOrderForProduct(product1.id)
+        persistNewOrderForProduct(product1.id)
+        persistNewOrderForProduct(product1.id)
+        persistNewOrderForProduct(product2.id)
+        persistNewOrderForProduct(product2.id)
+        persistNewOrderForProduct(product3.id)
+
+        // when
+        val foundProducts = productRepository.findMostOrderedProducts(numberOfProducts)
+
+        // then
+        assertThat(foundProducts).hasSize(numberOfProducts)
+        assertThat(foundProducts).containsExactlyInAnyOrder(product1, product2)
+    }
+
+    private fun persistNewOrderForProduct(productId: String) {
+        val order1 = Order(UUID.randomUUID().toString(), 1, productId, LocalDate.now(), 1)
+        entityManager.persist(order1)
     }
 }
