@@ -17,4 +17,6 @@ interface ProductRepository: JpaRepository<Product, String> {
     @Query(nativeQuery = true, value = "SELECT * FROM product LIMIT ?1")
     fun findMostOrderedProducts(i: Int): List<Product>
 
+    fun findByProductName(productName: String): List<Product>
+
 }
