@@ -24,11 +24,12 @@ class ProductController(
         if (authService.isProductAdmin().not())
             return ResponseEntity.notFound().build()
 
-        productRepository.save(Product(
+        val product = Product(
                 id = UUID.randomUUID().toString(),
                 productName = request.productName,
                 manufacturer = request.manufacturer
-        ))
+        )
+        productRepository.save(product)
 
         auditLoggerClient.logProductCreated(request)
 
