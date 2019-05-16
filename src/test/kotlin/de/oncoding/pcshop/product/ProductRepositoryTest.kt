@@ -2,6 +2,7 @@ package de.oncoding.pcshop.product
 
 import de.oncoding.pcshop.order.Order
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.Assert.*
@@ -10,6 +11,7 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.time.LocalDate
@@ -34,6 +36,30 @@ class ProductRepositoryTestJUnit {
         // then
         val loadedProduct = productRepository.getOne("1")
         assertEquals(productToSave, loadedProduct)
+    }
+
+    @Test(expected = JpaObjectRetrievalFailureException::class)
+    fun `throws JpaObjectRetrievalFailureException when entity not in db`() {
+        // given
+
+        // when
+        productRepository.getOne("non-existing-id")
+
+        // then
+    }
+
+
+    @Test
+    fun `loads all products from database (0)`() {
+        // given
+        val product1 = productRepository.save(Product("1", "Ryzen 7 2700X", "AMD"))
+        val product2 = productRepository.save(Product("2", "Core i9 9900K", "Intel"))
+
+        // when
+        val products = productRepository.findAll()
+
+        // then
+        assertEquals(listOf(product1, product2), products)
     }
 
     @Test
@@ -76,7 +102,7 @@ class ProductRepositoryTestJUnit {
         val products = productRepository.findAll()
 
         // then
-        assertTrue("Loaded products should contain excatly product 1 and 2",
+        assertTrue("Loaded products should contain exactly product 1 and 2",
                 containsExactlyInAnyOrder(products, product1, product2)
         )
     }
@@ -197,6 +223,20 @@ class ProductRepositoryTestAssertJ {
         // then
         assertThat(foundProducts).hasSize(numberOfProducts)
         assertThat(foundProducts).containsExactlyInAnyOrder(product1, product2)
+    }
+
+
+    @Test
+    fun `throws JpaObjectRetrievalFailureException when entity not in db`() {
+        // given
+
+        // when
+        assertThatThrownBy {
+            productRepository.getOne("non-existing-id")
+        // then
+        }.isInstanceOf(JpaObjectRetrievalFailureException::class.java)
+         .hasMessage("Entity not found")
+
     }
 
     private fun persistNewOrderForProduct(productId: String) {

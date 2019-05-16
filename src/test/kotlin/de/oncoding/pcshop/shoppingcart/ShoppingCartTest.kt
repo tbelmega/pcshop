@@ -10,7 +10,7 @@ import java.math.BigDecimal
 class ShoppingCartTestJUnit {
 
     @Test
-    fun `totalAmount() for for empty cart is zero`() {
+    fun `totalAmount() for empty cart is zero`() {
         // given
         val cart = ShoppingCart()
 
